@@ -1,0 +1,26 @@
+env = Environment()
+env["CC"] = "gcc -fopenmp -std=c++11"
+env["CXX"] = "g++ -fopenmp -std=c++11"
+
+flags = env.ParseFlags(['-pthread', '-Wall', '-Dprivate=public', '-DDEBUG', '-Wno-deprecated', '-fopenmp', '-Wno-strict-aliasing'])
+env.MergeFlags(flags)
+
+# dep
+G_LIB_NAME = []
+G_LIB_NAME.append("log4cplus")
+
+# -lz -lpthread -lrt -ldl -lcrypto -lssl
+G_LIB_NAME.append("z")
+G_LIB_NAME.append("pthread")
+G_LIB_NAME.append("rt")
+G_LIB_NAME.append("dl")
+G_LIB_NAME.append("crypto")
+G_LIB_NAME.append("ssl")
+G_LIB_NAME.append("jemalloc")
+
+G_LIB_PATH = ['./lib/']
+
+include_path = Glob("src/*")
+src_all = ["main.cpp"] + Glob("src/*/*.cpp")
+
+env.Program('output/index_checker', src_all, CPPPATH=include_path, LIBS=G_LIB_NAME, LIBPATH=G_LIB_PATH)

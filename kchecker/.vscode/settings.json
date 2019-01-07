@@ -1,0 +1,32 @@
+{
+    "files.associations": {
+        "string": "cpp",
+        "vector": "cpp",
+        "memory": "cpp",
+        "new": "cpp",
+        "locale": "cpp",
+        "iosfwd": "cpp",
+        "__config": "cpp",
+        "cstddef": "cpp",
+        "exception": "cpp",
+        "initializer_list": "cpp",
+        "stdexcept": "cpp",
+        "typeinfo": "cpp",
+        "cctype": "cpp",
+        "cstdint": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "cwchar": "cpp",
+        "cwctype": "cpp",
+        "queue": "cpp",
+        "__mutex_base": "cpp",
+        "__tree": "cpp",
+        "map": "cpp",
+        "unordered_map": "cpp",
+        "istream": "cpp",
+        "cmath": "cpp",
+        "type_traits": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp"
+    }
+}
