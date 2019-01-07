@@ -1,5 +1,5 @@
 # CPP-Intersection
-Stand alone intersection program for large scale data
+Stand alone intersection(or join) program for large scale data
 
 ## Background
 Intersection of two set is very simple. Yet when the data scale is large, things are quite different. Some people tend to use hadoop to handle such tasks. However, hadoop or mapreduce is not designed to do intersecting because there is nothing to do with reduce. Holding large scale data in memory will often cause OOM exception. Further more, Java consumes much more memories than C++ when building maps, almost 3~4 times, resulting in worse performace.
