@@ -11,11 +11,17 @@ using std::vector;
 using wshutil::BlockBoundQueue;
 
 namespace sophon_ick {
+
+#define MODE_SET "set"
+//#define MODE_BAG "bag"
+#define OP_JOIN "join"
+#define OP_SUBTRACT "subtract"
+
 class IckChecker; // pre-defined
 
 const static int _QUE_BOUND = 128;
 const static int _MAP_CAP = 1000;
-const static string _END_STR("_end_");
+const static string _END_STR("");
 
 void build_map(shared_ptr<IckChecker> checker);
 void check_map(shared_ptr<IckChecker> checker);
@@ -30,23 +36,25 @@ public:
     IckChecker (int qsize, int msize)  // queue bound, map capacity
             : stopped(false), build_cnt(0L), check_cnt(0L) { 
         //BlockBoundQueue<string> queue(qsize);
-        BlockBoundQueue<shared_ptr<vector<string>>> queue(_QUE_BOUND);
-        std::unordered_map<string, short> map();
+        BlockBoundQueue<shared_ptr<vector<string>>> queue(qsize);
+        std::unordered_map<string, int32_t> map();
         this->map.reserve(msize);
+        op = OP_JOIN;
+        mode = MODE_SET;
     }
 
     // functions
     // not thread-safe
     void enque(const string & str) {
         //queue.push(str);
-        const static size_t VSIZE = 1000;
+        const static size_t VSIZE = 2000;
         if(!cur_vec) {
             cur_vec = create_vec(VSIZE+1);
         }
         cur_vec->push_back(str);
         if(cur_vec->size() >= VSIZE) {
             queue.push(cur_vec);
-            cur_vec = create_vec(VSIZE+1);
+            cur_vec = nullptr;
         }
     }
 
@@ -58,11 +66,19 @@ public:
             stopped = true;
             return;
         }
+        /*if(mode==MODE_BAG) {
+            for(string s: *vec) {  
+                if(map.find(s) == map.end()) {
+                    map[s] = 1;
+                } else {
+                    map[s] += 1;
+                }
+            }
+        }*/ 
+        // MODE_SET
         for(string s: *vec) {  
             if(map.find(s) == map.end()) {
                 map[s] = 1;
-            } else {
-                map[s] += 1;
             }
         }
         build_cnt += vec->size();
@@ -84,9 +100,17 @@ public:
     }
 
     void record(std::ofstream & out) {
-        for (std::pair<string, int> it : map) {
-            if(it.second > 0) {
-                out << it.first << "\n" ;
+        if(op==OP_JOIN) {
+            for (std::pair<string, int> it : map) {
+                if(it.second <= 0) {
+                    out << it.first << "\n" ;
+                }
+            }
+        } else {
+            for (std::pair<string, int> it : map) {
+                if(it.second > 0) {
+                    out << it.first << "\n" ;
+                }
             }
         }
     }
@@ -117,6 +141,8 @@ public:
         vec->reserve(reserve_size);
         return vec;
     }
+    void setOp(const string& op) { this->op = op; }
+    void setMode(const string& mode) { this->mode = mode; }
     long get_build_cnt() { return build_cnt; }
     long get_check_cnt() { return check_cnt; }
     size_t get_map_size() { return map.size(); }
@@ -125,10 +151,12 @@ public:
 private:
     BlockBoundQueue<shared_ptr<vector<string>>> queue;
     shared_ptr<vector<string>> cur_vec;
-    std::unordered_map<string, short> map;
+    std::unordered_map<string, int32_t> map;
     volatile bool stopped;
     long build_cnt;
     long check_cnt;
+    string op;
+    string mode;
 };
 } // end of namespace
 

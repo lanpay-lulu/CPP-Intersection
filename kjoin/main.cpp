@@ -36,9 +36,8 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
-    int Partition = argparser.get<int>("partition");
+    int Partition = argparser.get<int>("partition"); // bucket number
 
-    //string fff = "data/0.db";
     string path = argparser.get<string>("path");
     string dfile = path+"/"+argparser.get<string>("dfile");
 
@@ -46,14 +45,15 @@ int main(int argc, char const *argv[])
     if(argparser.get<int>("dline") >= 0) {
         line_cnt = argparser.get<int>("dline");
     } else {
-        line_cnt = wshfunc::get_line_cnt(dfile);
+        //line_cnt = wshfunc::get_line_cnt(dfile);
+        line_cnt = 10000000; // default 1kw
     } 
-    LOG4CPLUS_INFO(logger, "dbfile line count is " << line_cnt);
+    LOG4CPLUS_INFO(logger, "suggested dbfile line count is " << line_cnt);
 
     // check cfiles line cnt
     //size_t cfiles_line_cnt = 0;
     bool is_cfiles_empty = true;
-    string cfiles = argparser.get<string>("cfiles");
+    string cfiles = argparser.get<string>("cfile");
     vector<string> cfile_vec = wshfunc::split(cfiles, ",");
     
     for(string f: cfile_vec) {
@@ -87,14 +87,17 @@ int main(int argc, char const *argv[])
     LOG4CPLUS_INFO(logger, "MAP_CAPACITY is " << MAP_CAPACITY);
 
     //== init IckCheckers and store in vector.
-    const int QUE_BOUND = 20000;
+    const int QUE_BOUND = 200;
     //const int MAP_CAPACITY = 100000;    
     vector<shared_ptr<IckChecker>> checker_vec;
     for(int i=0; i<Partition; i++) {
         checker_vec.push_back(shared_ptr<IckChecker>(new IckChecker(QUE_BOUND, MAP_CAPACITY)));
     }
+    for(int i=0; i<Partition; i++) {
+        checker_vec[i]->setOp(argparser.get<string>("op"));
+        checker_vec[i]->setMode(argparser.get<string>("mode"));
+    }
     
-
     //== init thread to build map
     vector<std::thread> build_thread_vec;    
     for(int i=0; i<Partition; i++) {
@@ -110,7 +113,7 @@ int main(int argc, char const *argv[])
     size_t lcnt = 0;
     std::ifstream infile(dfile);
     while (std::getline(infile, line)) {
-        if(line.length() <=1) { // ignore blank line
+        if(line.length() < 1) { // ignore blank line
             continue;
         }
         lcnt += 1;
@@ -136,9 +139,7 @@ int main(int argc, char const *argv[])
             std::thread(sophon_ick::check_map, checker_vec[i]));
     }
 
-    //== read check file
-    //string cfiles = argparser.get<string>("cfiles");
-    //vector<string> cfile_vec = wshfunc::split(cfiles, ",");
+    //== read cfiles
     for(string f: cfile_vec) {
         string cfile = path+"/"+f;
         LOG4CPLUS_INFO(logger, "handle cfile " << cfile);
@@ -161,7 +162,6 @@ int main(int argc, char const *argv[])
     t = wshfunc::gettime() - t;
     LOG4CPLUS_INFO(logger, "check map finished! took " << t);
 
-
     //== collect check failed rawkey into file
     string ofile = path+"/"+argparser.get<string>("ofile");
     std::ofstream outfile(ofile);
@@ -176,11 +176,17 @@ int main(int argc, char const *argv[])
 
 
 void get_cmd_arg(cmdline::parser & p) {
-    p.add<int>("partition", 'p', "partition", false, 2, cmdline::range(1, 8));
+    p.add<string>("op", '\0', "join operator: join or subtract", false, OP_JOIN, 
+        cmdline::oneof<string>(OP_JOIN,OP_SUBTRACT));
+    p.add<string>("mode", '\0', "mode: bag or set", false, MODE_SET, 
+        cmdline::oneof<string>(MODE_SET,MODE_SET));
+    p.add<int>("partition", 'p', "partition number or bucket number", false, 2, cmdline::range(1, 8)); // 分桶数(每个桶一个线程)
     p.add<string>("path", '\0', "data path directory", false, "data");
-    p.add<string>("dfile", '\0', "db file", false, "0.db");
-    p.add<int>("dline", '\0', "db file line cnt", false, -1);
-    p.add<string>("cfiles", '\0', "check file", false, "0.c1,0.c2");
+    p.add<string>("dfile", '\0', "1st file name", false, "0.st");
+    p.add<string>("cfile", '\0', "2nd file name", false, "0.nd");
+    p.add<int>("dline", '\0', "suggeted dfile line cnt", false, -1);
+    //p.add<string>("dfiles", '\0', "1st file list split by comma", false, "0.st,1.st");
+    //p.add<string>("cfiles", '\0', "2nd file list split by comma", false, "0.nd,1.nd");
     p.add<string>("ofile", '\0', "output file", false, "0.out");
 }
 
