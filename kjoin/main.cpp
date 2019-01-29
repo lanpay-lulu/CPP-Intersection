@@ -52,10 +52,12 @@ int main(int argc, char const *argv[])
 
     // check cfiles line cnt
     //size_t cfiles_line_cnt = 0;
-    bool is_cfiles_empty = true;
+    
     string cfiles = argparser.get<string>("cfile");
     vector<string> cfile_vec = wshfunc::split(cfiles, ",");
     
+    /*
+    bool is_cfiles_empty = true;
     for(string f: cfile_vec) {
         string cfile = path+"/"+f;
         if(!wshfunc::is_file_empty(cfile)) {
@@ -72,7 +74,7 @@ int main(int argc, char const *argv[])
         outfile << src.rdbuf();
         outfile.close();
         return 0;
-    }
+    }*/
 
     // Note: 1y keys takes about 9g memory to build map.
     const size_t MAX_MAP_CAPACITY = 150000000 / Partition; // total 1.5y
@@ -191,7 +193,7 @@ void get_cmd_arg(cmdline::parser & p) {
 }
 
 
-void cmdline_usage(int argc, const char * argv[]) {
+void cmdline_usage_example(int argc, const char * argv[]) {
     cmdline::parser a;
   // add specified type of variable.
   // 1st argument is long name
