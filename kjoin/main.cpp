@@ -26,6 +26,8 @@ int main(int argc, char const *argv[])
 
     LOG4CPLUS_INFO(logger, "index_checker start to run!");
 
+    size_t begin_time = wshfunc::gettime();
+
     //== parse cmd args
     cmdline::parser argparser;
     get_cmd_arg(argparser);
@@ -131,7 +133,7 @@ int main(int argc, char const *argv[])
         checker_vec[i]->reset_stop();
     }
     t = wshfunc::gettime() - t;
-    LOG4CPLUS_INFO(logger, "build map finished! took " << t);
+    LOG4CPLUS_INFO(logger, "[time-stat] build map finished! took " << t);
     
     t = wshfunc::gettime();
     //== init thread to check map
@@ -162,8 +164,9 @@ int main(int argc, char const *argv[])
         check_thread_vec[i].join();
     }
     t = wshfunc::gettime() - t;
-    LOG4CPLUS_INFO(logger, "check map finished! took " << t);
+    LOG4CPLUS_INFO(logger, "[time-stat] check map finished! took " << t);
 
+    t = wshfunc::gettime();
     //== collect check failed rawkey into file
     string ofile = path+"/"+argparser.get<string>("ofile");
     std::ofstream outfile(ofile);
@@ -172,6 +175,11 @@ int main(int argc, char const *argv[])
         checker_vec[i]->record(outfile);
     }
     outfile.close();
+    t = wshfunc::gettime() - t;
+    LOG4CPLUS_INFO(logger, "[time-stat] write to file finished! took " << t);
+
+    size_t total_time = wshfunc::gettime() - begin_time;
+    LOG4CPLUS_INFO(logger, "[time-stat] kjoin finished! total_time = " << total_time);
     
     return 0;
 }
